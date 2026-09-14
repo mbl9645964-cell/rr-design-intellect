@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion'
+import { useRef } from 'react'
+import { motion, useInView } from 'framer-motion'
 import { responsive } from '../data/content'
 
 const EASE = [0.22, 1, 0.36, 1]
@@ -20,16 +21,20 @@ export function Reveal({ children, delay = 0, y = 24, className = '', as = 'div'
 }
 
 // Line-by-line text reveal for editorial headings.
+// Observe the UN-clipped container (not each line): the lines start translated
+// outside their own overflow-hidden clip, so an IntersectionObserver placed on a
+// line would read it as 0% visible and never fire. The container is never clipped.
 export function RevealLines({ lines, className = '', lineClass = '', delay = 0 }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, amount: 0.15 })
   return (
-    <span className={className}>
+    <span ref={ref} className={className}>
       {lines.map((line, i) => (
         <span key={i} className="block overflow-hidden">
           <motion.span
             className={`block ${lineClass}`}
             initial={{ y: '110%' }}
-            whileInView={{ y: '0%' }}
-            viewport={{ once: true, margin: '-8% 0px' }}
+            animate={inView ? { y: '0%' } : { y: '110%' }}
             transition={{ duration: 1, ease: EASE, delay: delay + i * 0.09 }}
           >
             {line}
